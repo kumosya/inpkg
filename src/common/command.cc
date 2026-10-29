@@ -10,7 +10,7 @@ int command(int argc, char** argv) {
         puts(
             "usage: inpkg pack DIR --manifest FILE --output FILE | check "
             "FILE... | import FILE --package-dir DIR | install/upgrade FILE... "
-            "[--install-missing] | remove/info/adopt NAME | list | recover "
+            "[--install-missing] | remove/info/adopt NAME | list | apps | recover "
             "[--sysroot DIR] [-y]");
         return argc < 2 ? 2 : 0;
     }
@@ -106,7 +106,7 @@ int command(int argc, char** argv) {
         return fail("--install-missing requires upgrade") ? 0 : 2;
     if (platformOptions(argc, argv, options) != 0) return 2;
     Root root(options.root.c_str());
-    if (operation == Text("list") || operation == Text("info")) {
+    if (operation == Text("list") || operation == Text("info") || operation==Text("apps")) {
         if (!root.valid()) return 1;
         bool pending = false;
         if (!root.exists(join(options.database, Text("/.transaction")),
@@ -116,6 +116,7 @@ int command(int argc, char** argv) {
                        ? 0
                        : 1;
         Installer reader(root, options);
+        if(operation==Text("apps"))return arguments.empty() && reader.apps()?0:1;
         if (operation == Text("list"))
             return arguments.empty() && reader.list() ? 0 : 1;
         return arguments.size() == 1 && reader.info(arguments[0].c_str()) ? 0

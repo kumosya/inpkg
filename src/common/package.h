@@ -23,9 +23,11 @@ bool hostWrite(const char* path, const Bytes& input);
 struct Mapping {
     Text source, target;
     bool executable = false;
+    bool graphical = false;
 };
 struct Manifest {
     Text name, version, original;
+    Text guiId,guiNameEn,guiNameZh,guiNameJa,guiIcon,guiNotificationIcon;
     List<Mapping> files;
     bool parse(const Bytes& input);
 };
@@ -93,6 +95,7 @@ class Installer {
     bool remove(const char* name);
     bool adopt(const char* name);
     bool list() const;
+    bool apps() const;
     bool info(const char* name) const;
     bool prepare();
 };

@@ -1,64 +1,117 @@
 {
-    "name":  "inpkg",
-    "version":  "0.3",
-    "include_dirs":  [
-                         "include"
-                     ],
-    "targets":  [
-                    {
-                        "name":  "inpkg",
-                        "sources":  [
-                                        "src/common/*.cc",
-                                        "src/osinfo/*.cc"
-                                    ],
-                        "libraries":  [
-                                          "c++",
-                                          "c",
-                                          "os-c++"
-                                      ]
-                    }
-                ],
-    "install":  {
-                    "inpkg":  "/usr/bin/inpkg"
-                },
-    "cppflags":  [
-                     "-nostdinc",
-                     "-ffreestanding",
-                     "-fno-builtin",
-                     "-fno-stack-protector",
-                     "-fPIC",
-                     "-m64",
-                     "-mcmodel=small",
-                     "-mno-red-zone"
-                 ],
-    "cflags":  [
-                   "-std=c17",
-                   "-Os",
-                   "-Wall",
-                   "-Wextra"
-               ],
-    "cxxflags":  [
-                     "-std=c++20",
-                     "-fno-exceptions",
-                     "-fno-rtti",
-                     "-fno-use-cxa-atexit",
-                     "-fno-threadsafe-statics",
-                     "-nostdinc++",
-                     "-Os",
-                     "-Wall",
-                     "-Wextra"
-                 ],
-    "ldflags":  [
-                    "-nostdlib",
-                    "-nostartfiles",
-                    "-nodefaultlibs",
-                    "-Wl,--build-id=none,--hash-style=sysv",
-                    "-Wl,--no-as-needed"
-                ],
-    "asflags":  [
-
-                ],
-    "ldlibs":  [
-                   "gcc"
-               ]
+  "name": "inpkg",
+  "version": "0.2",
+  "include_dirs": [
+    "include"
+  ],
+  "targets": [
+    {
+      "name": "inpkg",
+      "sources": [
+        "src/common/*.cc",
+        "src/osinfo/*.cc"
+      ],
+      "libraries": [
+        "c++",
+        "c",
+        "os-c++"
+      ]
+    },
+    {
+      "name": "inpkg-gui",
+      "sources": [
+        "src/gui/main.cc",
+        "src/common/archive.cc",
+        "src/common/digest.cc",
+        "src/common/manifest.cc",
+        "src/osinfo/fs.cc"
+      ],
+      "libraries": [
+        "guiw-language",
+        "guiw-font",
+        "osgui-c++",
+        "c++",
+        "c",
+        "os-c++"
+      ]
+    },
+    {
+      "name": "libinpkg-lang-en.so",
+      "kind": "shared",
+      "sources": [
+        "src/gui/locale/en.cc"
+      ],
+      "libraries": [
+        "c",
+        "os-c++"
+      ]
+    },
+    {
+      "name": "libinpkg-lang-zh.so",
+      "kind": "shared",
+      "sources": [
+        "src/gui/locale/zh.cc"
+      ],
+      "libraries": [
+        "c",
+        "os-c++"
+      ]
+    },
+    {
+      "name": "libinpkg-lang-ja.so",
+      "kind": "shared",
+      "sources": [
+        "src/gui/locale/ja.cc"
+      ],
+      "libraries": [
+        "c",
+        "os-c++"
+      ]
+    }
+  ],
+  "install": {
+    "inpkg": "/usr/bin/inpkg",
+    "inpkg-gui": "/usr/bin/inpkg-gui",
+    "libinpkg-lang-en.so": "/usr/lib/guiw/locale/inpkg-en.so",
+    "libinpkg-lang-zh.so": "/usr/lib/guiw/locale/inpkg-zh.so",
+    "libinpkg-lang-ja.so": "/usr/lib/guiw/locale/inpkg-ja.so"
+  },
+  "cppflags": [
+    "-nostdinc",
+    "-ffreestanding",
+    "-fno-builtin",
+    "-fno-stack-protector",
+    "-fPIC",
+    "-m64",
+    "-mcmodel=small",
+    "-mno-red-zone"
+  ],
+  "cflags": [
+    "-std=c17",
+    "-Os",
+    "-Wall",
+    "-Wextra"
+  ],
+  "cxxflags": [
+    "-std=c++20",
+    "-fno-exceptions",
+    "-fno-rtti",
+    "-fno-use-cxa-atexit",
+    "-fno-threadsafe-statics",
+    "-nostdinc++",
+    "-Os",
+    "-Wall",
+    "-Wextra"
+  ],
+  "ldflags": [
+    "-nostdlib",
+    "-nostartfiles",
+    "-nodefaultlibs",
+    "-Wl,--build-id=none,--hash-style=sysv",
+    "-Wl,--no-as-needed"
+  ],
+  "asflags": [],
+  "ldlibs": [
+    "gcc"
+  ]
 }

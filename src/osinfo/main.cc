@@ -4,8 +4,8 @@
 #include <unistd.h>
 
 #include "../common/package.h"
-#include "os/directories.h"
-#include "os/users.h"
+#include "os/dir.h"
+#include "os/user.h"
 namespace inpkg {
 int platformOptions(int argc, char** argv, Options& options) {
     if (!options.root.empty())
@@ -20,31 +20,27 @@ int platformOptions(int argc, char** argv, Options& options) {
     if (!scope) scope = geteuid() == 0 ? "--system" : "--local";
     options.root = "/";
     char database[1024]{};
+    os::Dir directories;
     if (!strcmp(scope, "--system")) {
         if (geteuid() != 0 && strcmp(argv[1], "list") &&
-            strcmp(argv[1], "info"))
+            strcmp(argv[1], "info") && strcmp(argv[1],"apps"))
             return fail("system changes require root") ? 0 : 1;
-        if (!os::Directories::state(os::DirectoryScope::System, database,
-                                    sizeof(database), "inpkg"))
+        if (directories.open(os::Dir::Scope::System,"inpkg") || !directories.getState(database,sizeof(database)))
             return 1;
     } else {
         const uint32_t uid = !strcmp(scope, "--root") ? 0 : getuid();
         if (uid == 0 && geteuid() != 0) return 1;
-        os::UserProfile profile{};
-        os::UserCredentials credentials{};
-        credentials.id = uid;
-        if (os::UserClient::request(os::UserOperation::Lookup, credentials,
-                                    profile))
+        os::User::Profile profile{};
+        if (os::User().lookup(uid, profile))
             return 1;
         options.local  = true;
-        options.prefix = join(Text(profile.home + 1), Text("/.local"));
+        options.prefix = join(Text(profile.getHome() + 1), Text("/.local"));
         if (uid == geteuid()) {
-            if (!os::Directories::state(os::DirectoryScope::User, database,
-                                        sizeof(database), "inpkg"))
+            if (directories.open(os::Dir::Scope::User,"inpkg") || !directories.getState(database,sizeof(database)))
                 return 1;
         } else
             snprintf(database, sizeof(database), "%s/.local/state/inpkg",
-                     profile.home);
+                     profile.getHome());
     }
     if (*database != '/' || !relative(database + 1)) return 1;
     options.database = database + 1;

@@ -1,3 +1,4 @@
+#include "service/common/queries.h"
 #include <dirent.h>
 #include <cerrno>
 #include <fcntl.h>
@@ -159,8 +160,8 @@ bool Lock::acquire(const Root& root, const Text& database) {
         if (!hostRead(join(path_, Text("/owner")).c_str(), owner))
             return fail("package database locked");
         uint64_t pid = strtoull(text(owner).c_str(), nullptr, 10);
-        os::TaskInfo info{};
-        if (!pid || (!os::Task::query(pid, info) && info.state != 2))
+        os::detail::TaskControl info{};
+        if (!pid || (!info.refresh(pid) && info.getState() != 2))
             return fail("package database locked");
         if (unlink(join(path_, Text("/owner")).c_str()) || rmdir(path_.c_str()))
             return false;

@@ -455,6 +455,14 @@ bool Installer::list() const {
         printf("%s %s\n", entry.name.c_str(), entry.version.c_str());
     return true;
 }
+bool Installer::apps() const {
+    List<Manifest> entries;if(!records(entries))return false;
+    for(const auto& package:entries)for(const auto& file:package.files)if(file.graphical) {
+        const auto path=effective(file.target);if(path.empty())continue;
+        printf("%s\t%s\t/%s\n",package.name.c_str(),package.version.c_str(),path.c_str());
+    }
+    return true;
+}
 bool Installer::info(const char* name) const {
     if (!identifier(name)) return false;
     Bytes data;

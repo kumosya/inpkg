@@ -76,13 +76,14 @@ bool Manifest::parse(const Bytes& input) {
     name.clear();
     version = "1";
     files.clear();
+    guiId.clear();guiNameEn.clear();guiNameZh.clear();guiNameJa.clear();guiIcon.clear();guiNotificationIcon.clear();
     if (input.empty() || input.size() > 1024 * 1024)
         return fail("missing or oversized manifest");
     for (auto c : input)
         if (!c) return fail("NUL in manifest");
     original = text(input);
     Text copy(original);
-    List<Text> binaries, declarations;
+    List<Text> binaries, graphical, declarations;
     bool named = false, versioned = false;
     char* cursor = copy.data();
     while (*cursor) {
@@ -110,12 +111,22 @@ bool Manifest::parse(const Bytes& input) {
                 name = value;
             else
                 version = value;
-        } else if (!strcmp(key, "bin") || !strcmp(key, "file") ||
+        } else if(!strcmp(key,"gui-id") || !strcmp(key,"gui-name-en") || !strcmp(key,"gui-name-zh") || !strcmp(key,"gui-name-ja") || !strcmp(key,"gui-icon") || !strcmp(key,"gui-notification-icon")) {
+            Text& field=!strcmp(key,"gui-id")?guiId:!strcmp(key,"gui-name-en")?guiNameEn:!strcmp(key,"gui-name-zh")?guiNameZh:!strcmp(key,"gui-name-ja")?guiNameJa:!strcmp(key,"gui-icon")?guiIcon:guiNotificationIcon;
+            if(!field.empty() || strlen(value)>383)return fail("invalid or duplicate GUI metadata",key);
+            if(!strcmp(key,"gui-id") && !identifier(value))return fail("invalid GUI identity",value);
+            if((!strcmp(key,"gui-icon") || !strcmp(key,"gui-notification-icon")) && (*value!='/' || !relative(value+1)))return fail("invalid GUI icon path",value);
+            field=value;
+        } else if (!strcmp(key, "bin") || !strcmp(key,"gui") || !strcmp(key, "file") ||
                    !strcmp(key, "include")) {
             if (*value != '/' || !relative(value + 1))
                 return fail("invalid declaration", value);
             declarations.push_back(Text(value));
             if (!strcmp(key, "bin")) binaries.push_back(Text(value));
+            if (!strcmp(key,"gui")) {
+                if(!graphical.empty())return fail("one package may declare only one GUI application");
+                graphical.push_back(Text(value));
+            }
         } else if (!strcmp(key, "install")) {
             char* arrow = strstr(value, "->");
             if (!arrow) return fail("invalid install mapping");
@@ -140,6 +151,13 @@ bool Manifest::parse(const Bytes& input) {
     }
     if (!named || files.empty())
         return fail("name and install mappings are required");
+    if(graphical.empty() && (!guiId.empty() || !guiNameEn.empty() || !guiNameZh.empty() || !guiNameJa.empty() || !guiIcon.empty() || !guiNotificationIcon.empty()))
+        return fail("GUI metadata requires a GUI executable");
+    if(!graphical.empty()) {
+        bool declared=false;
+        for(const auto& executable:binaries)if(executable==graphical[0])declared=true;
+        if(!declared)return fail("GUI executable must be explicitly declared as bin");
+    }
     for (const auto& declared : declarations) {
         bool found = false;
         for (auto& mapping : files)
@@ -147,6 +165,7 @@ bool Manifest::parse(const Bytes& input) {
                 found = true;
                 for (const auto& executable : binaries)
                     if (executable == declared) mapping.executable = true;
+                for(const auto& gui:graphical)if(gui==declared)mapping.graphical=true;
             }
         if (!found)
             return fail("declaration missing install mapping",
